@@ -31,7 +31,7 @@ int main()
 			break;
 		}
 
-		c = fgetc(file);
+		fread(&c, sizeof(char), 1, file);
 
 		if (c == '\n' || feof(file))
 		{ // New number, end of sum or EOF.
