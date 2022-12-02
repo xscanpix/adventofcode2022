@@ -1,21 +1,40 @@
 #include <stdio.h>
 
+#define NUM_MAXES 3
+
+static const char *FILE_NAME = "input";
+
+void update_max(int sum, int *current_max_index, int maxes[])
+{
+	if (sum > maxes[*current_max_index])
+	{ // Sum is greater than current max.
+		// Next modular index is current max.
+		*current_max_index = (*current_max_index + 1) % NUM_MAXES;
+		maxes[*current_max_index] = sum;
+	}
+}
+
 int main()
 {
-	FILE *file = fopen("input", "r");
+	FILE *file = fopen(FILE_NAME, "r");
+
 	char c;
-	int number, sum;
-	number = sum = 0;
+	int number = 0, sum = 0;
 
-	int max[3] = {0, 0, 0}; // "Circular" buffer of maxes.
-	int max_cur = 0;		// Index of current max.
+	int maxes[NUM_MAXES] = {0}; // "Circular" buffer of maxes.
+	int current_max_index = 0;		  // Index of current max.
 
-	while (!feof(file))
+	while (1)
 	{
-		fread(&c, sizeof(char), 1, file);
+		if (feof(file))
+		{
+			break;
+		}
 
-		if (c == '\n')
-		{ // New number or end of sum.
+		c = fgetc(file);
+
+		if (c == '\n' || feof(file))
+		{ // New number, end of sum or EOF.
 			if (number > 0)
 			{ // Previous number was not last number to sum.
 				sum += number;
@@ -23,31 +42,33 @@ int main()
 			}
 			else
 			{ // Previous number was last number to sum.
-				if (sum > max[max_cur])
-				{ // Sum is greater than current max.
-					// Next index is current max.
-					max_cur = (max_cur + 1) % 3;
-					max[max_cur] = sum;
-				}
+				update_max(sum, &current_max_index, maxes);
 				sum = 0;
+			}
+
+			if (feof(file))
+			{ // Handle last sum (if no linebreak at the end).
+				update_max(sum, &current_max_index, maxes);
+				break;
 			}
 		}
 		else
 		{
-			// Iteratively calculate number in base 10.
+			// Calculate number in base 10.
 			number *= 10;
 			number += (c - '0');
 		}
 	}
+
 	fclose(file);
 
-	int max_3_sum = 0;
+	int max_sum = 0;
 
-	for (int i = 0; i < 3; ++i)
+	for (int i = 0; i < NUM_MAXES; ++i)
 	{
-		max_3_sum += max[i];
+		max_sum += maxes[i];
 	}
 
-	printf("Day 1 Answer 1: %d\n", max[max_cur]);
-	printf("Day 1 Answer 2: %d\n", max_3_sum);
+	printf("Day 1 Answer 1: %d\n", maxes[current_max_index]);
+	printf("Day 1 Answer 2: %d\n", max_sum);
 }
